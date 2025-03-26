@@ -319,16 +319,6 @@ impl<T> IndexMut<usize> for List<T> {
 
 impl<T: Debug> Debug for List<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "[")?;
-
-        let mut iter = self.iter();
-        if let Some(first) = iter.next() {
-            write!(f, "{:?}", first)?;
-            for value in iter {
-                write!(f, ", {:?}", value)?;
-            }
-        }
-
-        write!(f, "]")
+        f.debug_list().entries(self.iter()).finish()
     }
 }
