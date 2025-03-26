@@ -1,6 +1,3 @@
-mod linked_list;
-mod list_iter;
-mod list_item;
-mod list_into_iter;
+mod list;
 
-pub use linked_list::List;
+pub use list::linked_list::List;
