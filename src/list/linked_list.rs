@@ -1,3 +1,8 @@
+//! A doubly-linked list implementation with safe memory management.
+//
+//! This module provides a general-purpose doubly-linked list with O(1) operations
+//! for adding or removing elements at either end. The list maintains pointers to
+//! both ends to enable efficient bidirectional access.
 use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::ops::{Index, IndexMut};
@@ -7,6 +12,11 @@ use super::list_item::{DoubleLinkedListItem, ItemPtr};
 use super::list_iter::ListIter;
 use super::list_utility::{find_index_through, get_ptr_starting_point, Side};
 
+/// A doubly-linked list with pointers to both ends.
+///
+/// This generic list implementation allows for O(1) operations on both ends
+/// and provides efficient iteration. All heap allocations are properly managed
+/// to prevent memory leaks.
 #[derive(Default)]
 pub struct List<T> {
     start: Option<ItemPtr<T>>,
@@ -15,6 +25,11 @@ pub struct List<T> {
 }
 
 impl<T> List<T> {
+    /// Creates a new empty list.
+    ///
+    /// # Returns
+    ///
+    /// A new `List<T>` with no elements.
     pub fn new() -> Self {
         Self {
             start: None,
@@ -23,6 +38,11 @@ impl<T> List<T> {
         }
     }
 
+    /// Adds an element to the end of the list.
+    ///
+    /// # Parameters
+    ///
+    /// * `value` - The value to add to the list
     pub fn push_back(&mut self, value: T) {
         // Instanciate a heap alloc item and obtain a raw mutable ptr to it
         let new_item = Box::new(DoubleLinkedListItem {
@@ -52,6 +72,11 @@ impl<T> List<T> {
         }
     }
 
+    /// Adds an element to the beginning of the list.
+    ///
+    /// # Parameters
+    ///
+    /// * `value` - The value to add to the list
     pub fn push_front(&mut self, value: T) {
         // Instanciate a heap alloc item and obtain a raw mutable ptr to it
         let new_item = Box::new(DoubleLinkedListItem {
@@ -81,6 +106,23 @@ impl<T> List<T> {
         }
     }
 
+    /// Inserts an element at the specified index.
+    ///
+    /// # Parameters
+    ///
+    /// * `index` - The index at which to insert the element
+    /// * `value` - The value to insert
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(())` if the insertion was successful
+    /// * `Err(Errors::OutOfBounds)` if the index is greater than the list length
+    /// * `Err(Errors::InternalError)` if an internal error occurred
+    ///
+    /// # Note
+    ///
+    /// If `index == 0`, this is equivalent to `push_front()`.
+    /// If `index == self.len()`, this is equivalent to `push_back()`.
     pub fn insert(&mut self, index: usize, value: T) -> Result<(), Errors> {
         // Check if it couldn't be replace with push back or front
         if index == 0 {
@@ -126,6 +168,12 @@ impl<T> List<T> {
         }
     }
 
+    /// Removes and returns the first element of the list.
+    ///
+    /// # Returns
+    ///
+    /// * `Some(T)` containing the value if the list is not empty
+    /// * `None` if the list is empty
     pub fn pop_front(&mut self) -> Option<T> {
         // Get the front node
         let front_ptr = self.start?;
@@ -154,6 +202,12 @@ impl<T> List<T> {
         }
     }
 
+    /// Removes and returns the last element of the list.
+    ///
+    /// # Returns
+    ///
+    /// * `Some(T)` containing the value if the list is not empty
+    /// * `None` if the list is empty
     pub fn pop_back(&mut self) -> Option<T> {
         // Get the front node
         let back_ptr = self.end?;
@@ -180,11 +234,20 @@ impl<T> List<T> {
         }
     }
 
+    /// Returns the current number of elements in the list.
+    /// O(1) operation since list keep track of the number of element
+    ///
+    /// # Returns
+    ///
+    /// The number of elements in the list
     pub fn len(&self) -> usize {
         self.len
     }
 
-    /// Inplace reverse
+    /// Reverses the list in place.
+    ///
+    /// This operation swaps the start and end pointers and reverses
+    /// all internal links between nodes.
     pub fn reverse(&mut self) {
         // Don't do anything for empty lists
         if self.len == 0 {
@@ -210,6 +273,11 @@ impl<T> List<T> {
         }
     }
 
+    /// Creates an iterator over the list elements.
+    ///
+    /// # Returns
+    ///
+    /// A bidirectional iterator for traversing the list
     pub fn iter(&self) -> ListIter<T> {
         ListIter {
             left: self.start,
@@ -218,6 +286,18 @@ impl<T> List<T> {
         }
     }
 
+    /// Retrieves a pointer to the node at the specified index.
+    ///
+    /// This is an internal helper method used by other list methods.
+    ///
+    /// # Parameters
+    ///
+    /// * `index` - The index of the node to retrieve
+    ///
+    /// # Returns
+    ///
+    /// * `Some(ItemPtr<T>)` if the index is within bounds
+    /// * `None` if the index is out of bounds or the list is empty
     fn _get_ptr_at_index(&self, index: usize) -> Option<ItemPtr<T>> {
         // Early exit condition
         if self.len == 0 || index >= self.len {
@@ -238,28 +318,68 @@ impl<T> List<T> {
             raw_ptr, index, self.len, &side)
     }
 
+    /// Returns a reference to the element at the specified index.
+    ///
+    /// # Parameters
+    ///
+    /// * `index` - The index of the element to retrieve
+    ///
+    /// # Returns
+    ///
+    /// * `Some(&T)` if the index is within bounds
+    /// * `None` if the index is out of bounds
     pub fn get(&self, index: usize) -> Option<&T> {
         let raw_ptr = self._get_ptr_at_index(index);
         raw_ptr.map(|ptr| unsafe { &(*ptr).value })
     }
 
+    /// Returns a mutable reference to the element at the specified index.
+    ///
+    /// # Parameters
+    ///
+    /// * `index` - The index of the element to retrieve
+    ///
+    /// # Returns
+    ///
+    /// * `Some(&mut T)` if the index is within bounds
+    /// * `None` if the index is out of bounds
     pub fn get_mut(&mut self, index: usize) -> Option<&mut T> {
         let raw_ptr = self._get_ptr_at_index(index);
         raw_ptr.map(|ptr| unsafe { &mut (*ptr).value })
     }
 
+    /// Checks if the list is empty.
+    ///
+    /// # Returns
+    ///
+    /// `true` if the list contains no elements, `false` otherwise
     pub fn is_empty(&self) -> bool {
         self.len == 0
     }
 
+    /// Removes all elements from the list.
+    ///
+    /// This method calls `pop_front()` repeatedly until the list is empty.
     pub fn clear(&mut self) {
         while self.pop_front().is_some() {}
     }
 
+    /// Returns a reference to the first element of the list.
+    ///
+    /// # Returns
+    ///
+    /// * `Some(&T)` if the list is not empty
+    /// * `None` if the list is empty
     pub fn first(&self) -> Option<&T> {
         self.start.map(|ptr| unsafe { &(*ptr).value })
     }
 
+    /// Returns a reference to the last element of the list.
+    ///
+    /// # Returns
+    ///
+    /// * `Some(&T)` if the list is not empty
+    /// * `None` if the list is empty
     pub fn last(&self) -> Option<&T> {
         self.end.map(|ptr| unsafe { &(*ptr).value })
     }
