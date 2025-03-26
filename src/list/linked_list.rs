@@ -6,6 +6,7 @@ use super::list_item::{DoubleLinkedListItem, ItemPtr};
 use super::list_iter::ListIter;
 use super::list_utility::{find_index_through, get_ptr_starting_point, Side};
 
+#[derive(Default)]
 pub struct List<T> {
     start: Option<ItemPtr<T>>,
     end: Option<ItemPtr<T>>,
