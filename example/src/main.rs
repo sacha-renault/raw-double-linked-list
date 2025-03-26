@@ -4,8 +4,7 @@ fn main() {
     let mut list = List::new();
     list.push_back(1);
     list.push_back(2);
-    list[0] = 3;
-    println!("{}", list[1]);
+    list.insert(1, 5);
 
     for elt in list.into_iter() {
         println!("{elt}");

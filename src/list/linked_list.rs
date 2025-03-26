@@ -1,5 +1,6 @@
 use std::marker::PhantomData;
 use std::ops::{Index, IndexMut};
+use std::fmt::Debug;
 
 use super::list_item::{DoubleLinkedListItem, ItemPtr};
 use super::list_iter::ListIter;
@@ -12,7 +13,7 @@ pub struct List<T> {
     len: usize,
 }
 
-impl<T> List<T> {
+impl<T: Debug> List<T> {
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -98,24 +99,13 @@ impl<T> List<T> {
         });
         let raw_ptr = Box::into_raw(new_item);
 
-        // Start on the begin ptr and iterate until we arrive to the index position
-        let mut ptr_opt = self.start;
-        let mut current_index = 0;
-
-        // iterate to insert at correct position
-        while current_index < index - 1 {
-            if let Some(ptr) = ptr_opt {
-                ptr_opt = unsafe { (*ptr).next };
-                current_index += 1;
-            } else {
-                panic!("Unexpected None pointer while traversing list");
-            }
-        }
+        // get the before ptr
+        let before_ptr_opt = self._get_ptr_at_index(index - 1);
 
         // We check that if we can reach the current index
         // Here we no next and previous are NOT none since
         // We already handled case front and back
-        if let Some(before_ptr) = ptr_opt {
+        if let Some(before_ptr) = before_ptr_opt {
             unsafe {
                 // Replace the next pointer of before_ptr with raw_ptr, getting the after_ptr
                 let after_ptr = (*before_ptr).next.replace(raw_ptr).unwrap();
@@ -125,7 +115,11 @@ impl<T> List<T> {
                 (*raw_ptr).previous = Some(before_ptr);
                 (*raw_ptr).next = Some(after_ptr);
             }
+
+            // Increment the len
+            self.len += 1;
         }
+
     }
 
     pub fn pop_front(&mut self) -> Option<T> {
@@ -226,7 +220,7 @@ impl<T> List<T> {
         }
     }
 
-    fn _get_in(&self, index: usize) -> Option<ItemPtr<T>> {
+    fn _get_ptr_at_index(&self, index: usize) -> Option<ItemPtr<T>> {
         // Early exit condition
         if self.len == 0 || index > self.len {
             return None;
@@ -247,11 +241,11 @@ impl<T> List<T> {
     }
 
     pub fn get(&self, index: usize) -> Option<&T> {
-        unsafe { Some(&(*self._get_in(index)?).value) }
+        unsafe { Some(&(*self._get_ptr_at_index(index)?).value) }
     }
 
     pub fn get_mut(&mut self, index: usize) -> Option<&mut T> {
-        unsafe { Some(&mut (*self._get_in(index)?).value) }
+        unsafe { Some(&mut (*self._get_ptr_at_index(index)?).value) }
     }
 }
 
@@ -282,7 +276,7 @@ impl<T> Drop for List<T> {
     }
 }
 
-impl<A> FromIterator<A> for List<A> {
+impl<A: Debug> FromIterator<A> for List<A> {
     fn from_iter<T: IntoIterator<Item = A>>(iter: T) -> Self {
         let mut new_list = List::new();
 
@@ -295,7 +289,7 @@ impl<A> FromIterator<A> for List<A> {
     }
 }
 
-impl<T: Clone> Clone for List<T> {
+impl<T: Clone + Debug> Clone for List<T> {
     fn clone(&self) -> Self {
         let mut new_list = List::new();
 
@@ -308,7 +302,7 @@ impl<T: Clone> Clone for List<T> {
     }
 }
 
-impl<T> Index<usize> for List<T> {
+impl<T: Debug> Index<usize> for List<T> {
     type Output = T;
 
     fn index(&self, index: usize) -> &Self::Output {
@@ -316,7 +310,7 @@ impl<T> Index<usize> for List<T> {
     }
 }
 
-impl<T> IndexMut<usize> for List<T> {
+impl<T: Debug> IndexMut<usize> for List<T> {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         self.get_mut(index).expect("Index out of bounds")
     }
