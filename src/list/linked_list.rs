@@ -140,6 +140,7 @@ impl<T> List<T> {
         } else {
             // List is now empty
             self.end = None;
+            self.start = None;
         }
 
         // Decrement length
@@ -169,6 +170,7 @@ impl<T> List<T> {
         } else {
             // List is now empty
             self.end = None;
+            self.start = None;
         }
 
         // Decrement length
