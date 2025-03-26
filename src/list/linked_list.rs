@@ -477,3 +477,341 @@ impl<T: PartialEq> PartialEq for List<T> {
 }
 
 impl<T: Eq> Eq for List<T> {}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn constructor_test() {
+        // Arrange
+        let list = List::<i32>::new();
+
+        // Arrange
+        assert!(list.is_empty());
+        assert_eq!(list.iter().count(), 0);
+    }
+
+    #[test]
+    fn push_back_test() {
+        // Arrange
+        let mut list = List::new();
+
+        // Act
+        list.push_back(1);
+        list.push_back(2);
+        let mut iter = list.iter();
+
+        // Arrange
+        assert_eq!(list.len(), 2);
+        assert_eq!(list.iter().count(), 2);
+        assert_eq!(iter.next(), Some(&1));
+        assert_eq!(iter.next(), Some(&2));
+        assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn push_front_test() {
+        // Arrange
+        let mut list = List::new();
+
+        // Act
+        list.push_front(1);
+        list.push_front(2);
+        let mut iter = list.iter();
+
+        // Arrange
+        assert_eq!(list.len(), 2);
+        assert_eq!(list.iter().count(), 2);
+        assert_eq!(iter.next(), Some(&2));
+        assert_eq!(iter.next(), Some(&1));
+        assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn pop_front_test() {
+        // Arrange
+        let mut list = List::new();
+        list.extend(0..5);
+
+        // Arrange
+        assert_eq!(list.len(), 5);
+        assert_eq!(list.iter().count(), 5);
+        assert_eq!(list.pop_front(), Some(0));
+        assert_eq!(list.pop_front(), Some(1));
+        assert_eq!(list.pop_front(), Some(2));
+        assert_eq!(list.pop_front(), Some(3));
+        assert_eq!(list.pop_front(), Some(4));
+    }
+
+    #[test]
+    fn pop_back_test() {
+        // Arrange
+        let mut list = List::new();
+        list.extend((0..5).rev());
+
+        // Arrange
+        assert_eq!(list.len(), 5);
+        assert_eq!(list.pop_back(), Some(0));
+        assert_eq!(list.pop_back(), Some(1));
+        assert_eq!(list.pop_back(), Some(2));
+        assert_eq!(list.pop_back(), Some(3));
+        assert_eq!(list.pop_back(), Some(4));
+    }
+
+    #[test]
+    fn insert_empty_test() {
+        // Arrange
+        let mut list = List::new();
+        let _ = list.insert(0, 1);
+
+        // Assert
+        assert_eq!(list[0], 1);
+    }
+
+    #[test]
+    fn insert_push_front_test() {
+        // Arrange
+        let mut list = List::new();
+        list.push_front(1);
+        let _ = list.insert(0, 0);
+
+        // Assert
+        assert_eq!(list.len(), 2);
+        assert_eq!(list.iter().count(), 2);
+        for (expected, real) in list.iter().zip(0..2) {
+            assert_eq!(expected, &real);
+        }
+    }
+
+    #[test]
+    fn insert_push_back_test() {
+        // Arrange
+        let mut list = List::new();
+        list.push_front(1);
+        let _ = list.insert(1, 2);
+
+        // Assert
+        assert_eq!(list.len(), 2);
+        assert_eq!(list.iter().count(), 2);
+        for (expected, real) in list.iter().zip(1..3) {
+            assert_eq!(expected, &real);
+        }
+    }
+
+    #[test]
+    fn insert_test() {
+        // Arrange
+        let mut list = List::new();
+        list.push_back(1);
+        list.push_back(3);
+        let _ = list.insert(1, 2);
+
+        // Assert
+        assert_eq!(list.len(), 3);
+        assert_eq!(list.iter().count(), 3);
+        for (expected, real) in list.iter().zip(1..4) {
+            assert_eq!(expected, &real);
+        }
+    }
+
+    #[test]
+    fn insert_out_of_bound_test() {
+        // Arrange
+        let mut list = List::new();
+        list.push_back(1);
+        list.push_back(3);
+        let result = list.insert(3, 2);
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn reverse_test() {
+        // Arrange
+        let mut list = List::new();
+        list.extend(0..5);
+
+        // Assert
+        assert_eq!(list.len(), 5);
+        assert_eq!(list.iter().count(), 5);
+        for (expected, real) in list.iter().zip(0..5) {
+            assert_eq!(expected, &real);
+        }
+
+        // Act
+        list.reverse();
+
+        // Assert
+        assert_eq!(list.len(), 5);
+        assert_eq!(list.iter().count(), 5);
+        let mut other = (0..5).collect::<Vec<_>>();
+        other.reverse();
+        for (expected, real) in list.iter().zip(other) {
+            assert_eq!(expected, &real);
+        }
+    }
+
+    #[test]
+    fn clear_test() {
+        // Arrange
+        let mut list = List::new();
+        list.extend(0..5);
+        list.clear();
+
+        // assert
+        assert_eq!(list.len(), 0);
+        assert_eq!(list.iter().count(), 0);
+    }
+
+    #[test]
+    fn first_last_same_test() {
+        // Arrange
+        let mut list = List::new();
+        list.push_back(1);
+
+        // assert
+        assert_eq!(list.first(), Some(&1));
+        assert_eq!(list.last(), Some(&1));
+        assert_eq!(list.iter().count(), 1);
+    }
+
+    #[test]
+    fn first_last_different_test() {
+        // Arrange
+        let mut list = List::new();
+        list.push_back(1);
+        list.push_back(2);
+
+        // assert
+        assert_eq!(list.first(), Some(&1));
+        assert_eq!(list.last(), Some(&2));
+        assert_eq!(list.iter().count(), 2);
+    }
+
+    #[test]
+    fn first_last_empty_test() {
+        // Arrange
+        let list = List::<i32>::new();
+
+        // assert
+        assert_eq!(list.first(), None);
+        assert_eq!(list.last(), None);
+        assert_eq!(list.iter().count(), 0);
+    }
+
+    #[test]
+    fn from_iterator_test() {
+        // Arrange
+        let list = (0..5).collect::<List<_>>();
+
+        // assert
+        assert_eq!(list.first(), Some(&0));
+        assert_eq!(list.last(), Some(&4));
+        assert_eq!(list.iter().count(), 5);
+        assert_eq!(list.len(), 5);
+    }
+
+    #[test]
+    fn clone_add_test() {
+        // Arrange
+        let mut list = List::new();
+        list.push_back(0);
+        list.push_back(1);
+        let other_list = list.clone();
+        list.push_back(2);
+
+        // assert
+        assert_eq!(list.first(), other_list.first());
+        assert_ne!(list.last(), other_list.last());
+        assert_eq!(list.len(), other_list.len() + 1);
+        assert_eq!(list.iter().count(), other_list.iter().count() + 1);
+    }
+
+    #[test]
+    fn partial_eq_test() {
+        // Arrange
+        let list1 = (0..5).collect::<List<_>>();
+        let list2 = (0..5).collect::<List<_>>();
+
+        // Assert
+        assert_eq!(list1, list2);
+    }
+
+    #[test]
+    fn partial_eq_not_same_len_test() {
+        // Arrange
+        let list1 = (0..5).collect::<List<_>>();
+        let list2 = (0..4).collect::<List<_>>();
+
+        // Assert
+        assert_ne!(list1, list2);
+    }
+
+    #[test]
+    fn partial_eq_not_same_value_test() {
+        // Arrange
+        let list1 = (0..5).collect::<List<_>>();
+        let list2 = (1..6).collect::<List<_>>();
+
+        // Assert
+        assert_ne!(list1, list2);
+    }
+
+    #[test]
+    fn fmt_test() {
+        // Arrange
+        let list = (0..2).collect::<List<_>>();
+
+        // Convert the debug representation to a string
+        let debug_output = format!("{:?}", list);
+
+        // Assert
+        assert_eq!("[0, 1]", debug_output);
+    }
+
+    #[test]
+    fn get_index_test() {
+        // Arrange
+        let list = (0..2).collect::<List<_>>();
+
+        // Assert
+        assert_eq!(0, list[0]);
+        assert_eq!(Some(&0), list.get(0));
+        assert_eq!(1, list[1]);
+        assert_eq!(Some(&1), list.get(1));
+        assert_eq!(None, list.get(2));
+    }
+
+    #[test]
+    fn get_mut_test() {
+        // Arrange
+        let mut list = (0..2).collect::<List<_>>();
+
+        // Act & Assert
+        list[0] = 1;
+        assert_eq!(1, list[0]);
+        list.get_mut(1).map(|v| *v += 1);
+        assert_eq!(2, list[1]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn index_panic_out_of_bounds() {
+        // Arrange
+        let list = (0..2).collect::<List<_>>();
+
+        // Assert
+        list[2];
+    }
+
+    #[test]
+    #[should_panic]
+    fn index_mut_panic_out_of_bounds() {
+        // Arrange
+        let mut list = (0..2).collect::<List<_>>();
+
+        // Assert
+        list[2] = 2;
+    }
+}
