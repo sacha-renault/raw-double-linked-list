@@ -7,5 +7,5 @@ fn main() {
 
     println!("{list:?}");
     println!("{:?}", list.pop());
-    // println!("{:?}", list.pop());
+    println!("{:?}", list.pop());
 }
