@@ -1,10 +1,11 @@
-use raw_double_linked_list::List;
+use raw_double_linked_list::prelude::*;
 
 fn main() {
-    let mut list = List::new();
-    list.push_back(1);
-    list.push_back(2);
-    list.insert(1, 5);
+    let mut list = Queue::new();
+    list.push(1);
+    list.push(2);
 
-    println!("{list:?}")
+    println!("{list:?}");
+    println!("{:?}", list.pop());
+    // println!("{:?}", list.pop());
 }

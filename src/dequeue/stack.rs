@@ -1,5 +1,6 @@
+use std::fmt::Debug;
 use super::dequeue::Dequeue;
-use crate::List;
+use crate::list::linked_list::List;
 
 #[derive(Default)]
 pub struct Stack<T> {
@@ -25,5 +26,11 @@ impl<T> Dequeue for Stack<T> {
 
     fn len(&self) -> usize {
         self.inner.len()
+    }
+}
+
+impl<T: Debug> Debug for Stack<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_list().entries(self.inner.iter()).finish()
     }
 }

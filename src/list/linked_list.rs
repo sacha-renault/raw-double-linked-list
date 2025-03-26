@@ -14,7 +14,6 @@ pub struct List<T> {
 }
 
 impl<T> List<T> {
-    #[must_use]
     pub fn new() -> Self {
         Self {
             start: None,
@@ -241,13 +240,29 @@ impl<T> List<T> {
     }
 
     pub fn get(&self, index: usize) -> Option<&T> {
-        let raw_ptr = self._get_ptr_at_index(index)?;
-        unsafe { Some(&(*raw_ptr).value) }
+        let raw_ptr = self._get_ptr_at_index(index);
+        raw_ptr.map(|ptr| unsafe { &(*ptr).value })
     }
 
     pub fn get_mut(&mut self, index: usize) -> Option<&mut T> {
-        let raw_ptr = self._get_ptr_at_index(index)?;
-        unsafe { Some(&mut (*raw_ptr).value) }
+        let raw_ptr = self._get_ptr_at_index(index);
+        raw_ptr.map(|ptr| unsafe { &mut (*ptr).value })
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
+    pub fn clear(&mut self) {
+        while self.pop_front().is_some() {}
+    }
+
+    pub fn first(&self) -> Option<&T> {
+        self.start.map(|ptr| unsafe { &(*ptr).value })
+    }
+
+    pub fn last(&self) -> Option<&T> {
+        self.end.map(|ptr| unsafe { &(*ptr).value })
     }
 }
 
@@ -323,3 +338,23 @@ impl<T: Debug> Debug for List<T> {
         f.debug_list().entries(self.iter()).finish()
     }
 }
+
+impl<T> Extend<T> for List<T> {
+    fn extend<I: IntoIterator<Item = T>>(&mut self, iter: I) {
+        for item in iter {
+            self.push_back(item);
+        }
+    }
+}
+
+impl<T: PartialEq> PartialEq for List<T> {
+    fn eq(&self, other: &Self) -> bool {
+        if self.len() != other.len() {
+            return false;
+        }
+
+        self.iter().zip(other.iter()).all(|(a, b)| a == b)
+    }
+}
+
+impl<T: Eq> Eq for List<T> {}
