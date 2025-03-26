@@ -1,8 +1,8 @@
-use super::list_item::DoubleLinkedListItem;
+use super::list_item::ItemPtr;
 
 pub struct ListIter<'a, T> {
-    pub(crate) left: Option<*mut DoubleLinkedListItem<T>>,
-    pub(crate) right: Option<*mut DoubleLinkedListItem<T>>,
+    pub(crate) left: Option<ItemPtr<T>>,
+    pub(crate) right: Option<ItemPtr<T>>,
     pub(crate) _phantom: std::marker::PhantomData<&'a T>,
 }
 

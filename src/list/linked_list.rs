@@ -1,12 +1,14 @@
 use std::marker::PhantomData;
+use std::ops::{Index, IndexMut};
 
-use super::list_item::DoubleLinkedListItem;
+use super::list_item::{DoubleLinkedListItem, ItemPtr};
 use super::list_iter::ListIter;
+use super::list_utility::{find_index_through, get_ptr_starting_point, Side};
 
 #[derive(Debug)]
 pub struct List<T> {
-    start: Option<*mut DoubleLinkedListItem<T>>,
-    end: Option<*mut DoubleLinkedListItem<T>>,
+    start: Option<ItemPtr<T>>,
+    end: Option<ItemPtr<T>>,
     len: usize,
 }
 
@@ -128,7 +130,7 @@ impl<T> List<T> {
 
     pub fn pop_front(&mut self) -> Option<T> {
         if self.len == 0 {
-            return None;
+            return None; // Empty list
         }
 
         // Get the front node
@@ -159,7 +161,7 @@ impl<T> List<T> {
 
     pub fn pop_back(&mut self) -> Option<T> {
         if self.len == 0 {
-            return None;
+            return None; // Empty list
         }
 
         // Get the front node
@@ -224,12 +226,32 @@ impl<T> List<T> {
         }
     }
 
-    pub fn get(&self, index: usize) -> Option<&T> {
-        todo!()
+    fn _get_in(&self, index: usize) -> Option<ItemPtr<T>> {
+        // Early exit condition
+        if self.len == 0 || index > self.len {
+            return None;
+        }
+
+        // Start by finding where we should starting from
+        let side = get_ptr_starting_point(index, self.len);
+
+        // Get the appropriate starting pointer based on side
+        let raw_ptr = match &side {
+            &Side::Left => self.start?,
+            &Side::Right => self.end?
+        };
+
+        // retrieve the associated node
+        find_index_through(
+            raw_ptr, index, self.len, &side)
     }
 
-    pub fn get_mut(&self, index: usize) -> Option<&mut T> {
-        todo!()
+    pub fn get(&self, index: usize) -> Option<&T> {
+        unsafe { Some(&(*self._get_in(index)?).value) }
+    }
+
+    pub fn get_mut(&mut self, index: usize) -> Option<&mut T> {
+        unsafe { Some(&mut (*self._get_in(index)?).value) }
     }
 }
 
@@ -283,5 +305,19 @@ impl<T: Clone> Clone for List<T> {
         }
 
         new_list
+    }
+}
+
+impl<T> Index<usize> for List<T> {
+    type Output = T;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        self.get(index).expect("Index out of bounds")
+    }
+}
+
+impl<T> IndexMut<usize> for List<T> {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        self.get_mut(index).expect("Index out of bounds")
     }
 }
