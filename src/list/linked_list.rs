@@ -1,6 +1,5 @@
 use std::marker::PhantomData;
 use std::ops::{Index, IndexMut};
-use std::fmt::Debug;
 
 use super::list_item::{DoubleLinkedListItem, ItemPtr};
 use super::list_iter::ListIter;
@@ -13,7 +12,7 @@ pub struct List<T> {
     len: usize,
 }
 
-impl<T: Debug> List<T> {
+impl<T> List<T> {
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -241,11 +240,13 @@ impl<T: Debug> List<T> {
     }
 
     pub fn get(&self, index: usize) -> Option<&T> {
-        unsafe { Some(&(*self._get_ptr_at_index(index)?).value) }
+        let raw_ptr = self._get_ptr_at_index(index)?;
+        unsafe { Some(&(*raw_ptr).value) }
     }
 
     pub fn get_mut(&mut self, index: usize) -> Option<&mut T> {
-        unsafe { Some(&mut (*self._get_ptr_at_index(index)?).value) }
+        let raw_ptr = self._get_ptr_at_index(index)?;
+        unsafe { Some(&mut (*raw_ptr).value) }
     }
 }
 
@@ -276,7 +277,7 @@ impl<T> Drop for List<T> {
     }
 }
 
-impl<A: Debug> FromIterator<A> for List<A> {
+impl<A> FromIterator<A> for List<A> {
     fn from_iter<T: IntoIterator<Item = A>>(iter: T) -> Self {
         let mut new_list = List::new();
 
@@ -289,7 +290,7 @@ impl<A: Debug> FromIterator<A> for List<A> {
     }
 }
 
-impl<T: Clone + Debug> Clone for List<T> {
+impl<T: Clone> Clone for List<T> {
     fn clone(&self) -> Self {
         let mut new_list = List::new();
 
@@ -302,7 +303,7 @@ impl<T: Clone + Debug> Clone for List<T> {
     }
 }
 
-impl<T: Debug> Index<usize> for List<T> {
+impl<T> Index<usize> for List<T> {
     type Output = T;
 
     fn index(&self, index: usize) -> &Self::Output {
@@ -310,7 +311,7 @@ impl<T: Debug> Index<usize> for List<T> {
     }
 }
 
-impl<T: Debug> IndexMut<usize> for List<T> {
+impl<T> IndexMut<usize> for List<T> {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         self.get_mut(index).expect("Index out of bounds")
     }
