@@ -223,7 +223,7 @@ impl<T> List<T> {
 
     fn _get_ptr_at_index(&self, index: usize) -> Option<ItemPtr<T>> {
         // Early exit condition
-        if self.len == 0 || index > self.len {
+        if self.len == 0 || index >= self.len {
             return None;
         }
 
