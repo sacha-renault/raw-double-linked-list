@@ -157,6 +157,35 @@ impl<T> List<T> {
         }
     }
 
+    pub fn pop_back(&mut self) -> Option<T> {
+        if self.len == 0 {
+            return None;
+        }
+
+        // Get the front node
+        let back_ptr = self.end?;
+
+        // Update the start pointer
+        self.end = unsafe { (*back_ptr).previous };
+
+        // If there's a new start, update its previous pointer
+        if let Some(new_end) = self.end {
+            unsafe { (*new_end).next = None; }
+        } else {
+            // List is now empty
+            self.end = None;
+        }
+
+        // Decrement length
+        self.len -= 1;
+
+        // Convert the raw pointer back to a Box and return the value
+        unsafe {
+            let box_item = Box::from_raw(back_ptr);
+            Some(box_item.value)
+        }
+    }
+
     pub fn len(&self) -> usize {
         self.len
     }
