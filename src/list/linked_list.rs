@@ -2,6 +2,7 @@ use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::ops::{Index, IndexMut};
 
+use super::errors::Errors;
 use super::list_item::{DoubleLinkedListItem, ItemPtr};
 use super::list_iter::ListIter;
 use super::list_utility::{find_index_through, get_ptr_starting_point, Side};
@@ -80,14 +81,16 @@ impl<T> List<T> {
         }
     }
 
-    pub fn insert(&mut self, index: usize, value: T) {
+    pub fn insert(&mut self, index: usize, value: T) -> Result<(), Errors> {
         // Check if it couldn't be replace with push back or front
         if index == 0 {
-            return self.push_front(value);
+            self.push_front(value);
+            return Ok(());
         } else if index == self.len {
-            return self.push_back(value);
+            self.push_back(value);
+            return Ok(());
         } else if index > self.len {
-            panic!("Index out of bounds");
+            return Err(Errors::OutOfBounds);
         }
 
         // Instanciate a heap alloc item and obtain a raw mutable ptr to it
@@ -117,15 +120,13 @@ impl<T> List<T> {
 
             // Increment the len
             self.len += 1;
+            Ok(())
+        } else {
+            Err(Errors::InternalError)
         }
-
     }
 
     pub fn pop_front(&mut self) -> Option<T> {
-        if self.len == 0 {
-            return None; // Empty list
-        }
-
         // Get the front node
         let front_ptr = self.start?;
 
@@ -154,10 +155,6 @@ impl<T> List<T> {
     }
 
     pub fn pop_back(&mut self) -> Option<T> {
-        if self.len == 0 {
-            return None; // Empty list
-        }
-
         // Get the front node
         let back_ptr = self.end?;
 
