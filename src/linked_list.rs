@@ -1,0 +1,258 @@
+use std::marker::PhantomData;
+
+use super::list_item::DoubleLinkedListItem;
+use super::list_iter::ListIter;
+
+#[derive(Debug)]
+pub struct List<T> {
+    start: Option<*mut DoubleLinkedListItem<T>>,
+    end: Option<*mut DoubleLinkedListItem<T>>,
+    len: usize,
+}
+
+impl<T> List<T> {
+    #[must_use]
+    pub fn new() -> Self {
+        Self {
+            start: None,
+            end: None,
+            len: 0,
+        }
+    }
+
+    pub fn push_back(&mut self, value: T) {
+        // Instanciate a heap alloc item and obtain a raw mutable ptr to it
+        let new_item = Box::new(DoubleLinkedListItem {
+            value,
+            next: None,
+            previous: None,
+        });
+        let raw_ptr = Box::into_raw(new_item);
+        self.len += 1;
+
+        // start and end or both Some or both None
+        // If they're none, we have to init both
+        match self.start {
+            None => {
+                self.start = Some(raw_ptr);
+                self.end = Some(raw_ptr);
+            }
+            Some(_) => {
+                let previous_end_opt = self.end.replace(raw_ptr);
+                if let Some(previous_end) = previous_end_opt {
+                    unsafe {
+                        (*previous_end).next = Some(raw_ptr);
+                        (*raw_ptr).previous = Some(previous_end);
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn push_front(&mut self, value: T) {
+        // Instanciate a heap alloc item and obtain a raw mutable ptr to it
+        let new_item = Box::new(DoubleLinkedListItem {
+            value,
+            next: None,
+            previous: None,
+        });
+        let raw_ptr = Box::into_raw(new_item);
+        self.len += 1;
+
+        // start and end or both Some or both None
+        // If they're none, we have to init both
+        match self.start {
+            None => {
+                self.start = Some(raw_ptr);
+                self.end = Some(raw_ptr);
+            }
+            Some(_) => {
+                let previous_start_opt = self.start.replace(raw_ptr);
+                if let Some(previous_start) = previous_start_opt {
+                    unsafe {
+                        (*previous_start).previous = Some(raw_ptr);
+                        (*raw_ptr).next = Some(previous_start);
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn insert(&mut self, index: usize, value: T) {
+        // Check if it couldn't be replace with push back or front
+        if index == 0 {
+            return self.push_front(value);
+        } else if index == self.len {
+            return self.push_back(value);
+        } else if index > self.len {
+            panic!("Index out of bounds");
+        }
+
+        // Instanciate a heap alloc item and obtain a raw mutable ptr to it
+        let new_item = Box::new(DoubleLinkedListItem {
+            value,
+            next: None,
+            previous: None,
+        });
+        let raw_ptr = Box::into_raw(new_item);
+
+        // Start on the begin ptr and iterate until we arrive to the index position
+        let mut ptr_opt = self.start;
+        let mut current_index = 0;
+
+        // iterate to insert at correct position
+        while current_index < index - 1 {
+            if let Some(ptr) = ptr_opt {
+                ptr_opt = unsafe { (*ptr).next };
+                current_index += 1;
+            } else {
+                panic!("Unexpected None pointer while traversing list");
+            }
+        }
+
+        // We check that if we can reach the current index
+        // Here we no next and previous are NOT none since
+        // We already handled case front and back
+        if let Some(before_ptr) = ptr_opt {
+            unsafe {
+                // Replace the next pointer of before_ptr with raw_ptr, getting the after_ptr
+                let after_ptr = (*before_ptr).next.replace(raw_ptr).unwrap();
+                (*after_ptr).previous = Some(raw_ptr);
+
+                // Connect new node to nodes before and after
+                (*raw_ptr).previous = Some(before_ptr);
+                (*raw_ptr).next = Some(after_ptr);
+            }
+        }
+    }
+
+    pub fn pop_front(&mut self) -> Option<T> {
+        if self.len == 0 {
+            return None;
+        }
+
+        // Get the front node
+        let front_ptr = self.start?;
+
+        // Update the start pointer
+        self.start = unsafe { (*front_ptr).next };
+
+        // If there's a new start, update its previous pointer
+        if let Some(new_start) = self.start {
+            unsafe {
+                (*new_start).previous = None;
+            }
+        } else {
+            // List is now empty
+            self.end = None;
+        }
+
+        // Decrement length
+        self.len -= 1;
+
+        // Convert the raw pointer back to a Box and return the value
+        unsafe {
+            let box_item = Box::from_raw(front_ptr);
+            Some(box_item.value)
+        }
+    }
+
+    pub fn len(&self) -> usize {
+        self.len
+    }
+
+    /// Inplace reverse
+    pub fn reverse(&mut self) {
+        // Don't do anything for empty lists
+        if self.len == 0 {
+            return;
+        }
+
+        // Start on the begin ptr and iterate until we reach the end
+        let mut current = self.start;
+
+        // Swap start and end pointers
+        std::mem::swap(&mut self.start, &mut self.end);
+
+        // Iterate through each node
+        while let Some(ptr) = current {
+            // Save the next node before we change any pointers
+            let next_node = unsafe { (*ptr).next };
+
+            // Swap next and previous pointers for the current node
+            unsafe { std::mem::swap(&mut (*ptr).next, &mut (*ptr).previous); }
+
+            // Move to the next node (which was saved before the swap)
+            current = next_node;
+        }
+    }
+
+    pub fn iter(&self) -> ListIter<T> {
+        ListIter {
+            left: self.start,
+            right: self.end,
+            _phantom: PhantomData,
+        }
+    }
+
+    pub fn get(&self, index: usize) -> Option<&T> {
+        todo!()
+    }
+
+    pub fn get_mut(&self, index: usize) -> Option<&mut T> {
+        todo!()
+    }
+}
+
+
+impl<T> Drop for List<T> {
+    fn drop(&mut self) {
+        // Start on the begin ptr and iterate until we arrive to the end
+        let mut ptr_opt = self.start;
+
+        // Iterate
+        while let Some(ptr) = ptr_opt {
+            // get next
+            let next = unsafe { (*ptr).next };
+
+            // Drop the node (taking ownership with a box will drop it)
+            // At the end of the iteration
+            unsafe {
+                let _ = Box::from_raw(ptr);
+            }
+
+            // Move to next
+            ptr_opt = next;
+        }
+
+        // Cls other ptrs
+        self.start = None;
+        self.end = None;
+    }
+}
+
+impl<A> FromIterator<A> for List<A> {
+    fn from_iter<T: IntoIterator<Item = A>>(iter: T) -> Self {
+        let mut new_list = List::new();
+
+        // Iterate through original list and add each value to the new list
+        for item in iter {
+            new_list.push_back(item);
+        }
+
+        new_list
+    }
+}
+
+impl<T: Clone> Clone for List<T> {
+    fn clone(&self) -> Self {
+        let mut new_list = List::new();
+
+        // Iterate through original list and add each value to the new list
+        for item in self.iter() {
+            new_list.push_back(item.clone());
+        }
+
+        new_list
+    }
+}
