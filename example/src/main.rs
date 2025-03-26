@@ -6,7 +6,5 @@ fn main() {
     list.push_back(2);
     list.insert(1, 5);
 
-    for elt in list.into_iter() {
-        println!("{elt}");
-    }
+    println!("{list:?}")
 }

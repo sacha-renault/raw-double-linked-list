@@ -1,3 +1,4 @@
+use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::ops::{Index, IndexMut};
 
@@ -5,7 +6,6 @@ use super::list_item::{DoubleLinkedListItem, ItemPtr};
 use super::list_iter::ListIter;
 use super::list_utility::{find_index_through, get_ptr_starting_point, Side};
 
-#[derive(Debug)]
 pub struct List<T> {
     start: Option<ItemPtr<T>>,
     end: Option<ItemPtr<T>>,
@@ -314,5 +314,21 @@ impl<T> Index<usize> for List<T> {
 impl<T> IndexMut<usize> for List<T> {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         self.get_mut(index).expect("Index out of bounds")
+    }
+}
+
+impl<T: Debug> Debug for List<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "[")?;
+
+        let mut iter = self.iter();
+        if let Some(first) = iter.next() {
+            write!(f, "{:?}", first)?;
+            for value in iter {
+                write!(f, ", {:?}", value)?;
+            }
+        }
+
+        write!(f, "]")
     }
 }
