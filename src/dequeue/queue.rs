@@ -1,4 +1,4 @@
-use super::dequeue::Dequeue;
+use super::single_ended_collection::SingleEndedCollection ;
 use crate::list::linked_list::List;
 use std::fmt::Debug;
 
@@ -13,7 +13,7 @@ impl<T> Queue<T> {
     }
 }
 
-impl<T> Dequeue for Queue<T> {
+impl<T> SingleEndedCollection  for Queue<T> {
     type Item = T;
 
     fn pop(&mut self) -> Option<Self::Item> {

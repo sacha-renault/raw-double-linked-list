@@ -1,4 +1,4 @@
-use super::dequeue::Dequeue;
+use super::single_ended_collection::SingleEndedCollection ;
 use crate::list::linked_list::List;
 use std::fmt::Debug;
 
@@ -13,7 +13,7 @@ impl<T> Stack<T> {
     }
 }
 
-impl<T> Dequeue for Stack<T> {
+impl<T> SingleEndedCollection  for Stack<T> {
     type Item = T;
 
     fn pop(&mut self) -> Option<Self::Item> {
@@ -63,9 +63,11 @@ mod tests {
 
         assert_eq!(stack.pop(), Some(2));
         assert_eq!(stack.len(), 1);
+        assert!(!stack.is_empty());
 
         assert_eq!(stack.pop(), Some(1));
         assert_eq!(stack.len(), 0);
+        assert!(stack.is_empty());
 
         // Test popping from an empty stack
         assert_eq!(stack.pop(), None);
