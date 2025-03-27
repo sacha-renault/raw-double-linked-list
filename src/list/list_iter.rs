@@ -32,7 +32,7 @@ impl<'a, T> Iterator for ListIter<'a, T> {
     }
 }
 
-impl<'a, T> DoubleEndedIterator for ListIter<'a, T> {
+impl<T> DoubleEndedIterator for ListIter<'_, T> {
     fn next_back(&mut self) -> Option<Self::Item> {
         match self.right {
             Some(ptr) => {

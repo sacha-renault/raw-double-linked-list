@@ -312,9 +312,9 @@ impl<T> List<T> {
         let side = get_ptr_starting_point(index, self.len);
 
         // Get the appropriate starting pointer based on side
-        let raw_ptr = match &side {
-            &Side::Left => self.start,
-            &Side::Right => self.end,
+        let raw_ptr = match side {
+            Side::Left => self.start,
+            Side::Right => self.end,
         }?;
 
         // retrieve the associated node

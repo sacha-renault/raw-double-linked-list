@@ -22,18 +22,18 @@ pub fn find_index_through<T>(
 ) -> Option<ItemPtr<T>> {
     // Starting index
     let mut current_index = match side {
-        &Side::Left => 0,
-        &Side::Right => len - 1,
+        Side::Left => 0,
+        Side::Right => len - 1,
     };
 
     // Iterate until we find the correct index (or we get a null value)
     while current_index != target_index {
         match side {
-            &Side::Left => {
+            Side::Left => {
                 current_index += 1;
                 raw_ptr = unsafe { (*raw_ptr).next? }
             }
-            &Side::Right => {
+            Side::Right => {
                 current_index -= 1;
                 raw_ptr = unsafe { (*raw_ptr).previous? }
             }
