@@ -1,3 +1,12 @@
+//! Queue implementation providing first-in, first-out (FIFO) element access.
+//!
+//! This module implements a Queue data structure that follows FIFO semantics.
+//! Elements are added to one end of the queue and removed from the opposite end,
+//! ensuring the first element added will be the first one removed.
+//!
+//! The implementation uses a linked list as its underlying storage mechanism,
+//! providing efficient operations for both insertion and removal.
+
 use super::single_ended_collection::SingleEndedCollection ;
 use crate::list::linked_list::List;
 use std::fmt::Debug;
@@ -7,7 +16,37 @@ pub struct Queue<T> {
     inner: List<T>,
 }
 
+/// A first-in, first-out (FIFO) collection.
+///
+/// `Queue` stores elements in the order they were added and removes them
+/// in the same order. This implementation uses a linked list as its
+/// underlying storage, providing O(1) complexity for both push and pop operations.
+///
+/// # Type Parameters
+///
+/// * `T` - The type of elements stored in the queue.
+///
+/// # Examples
+///
+/// ```
+/// use raw_double_linked_list::prelude::{SingleEndedCollection, Queue};
+///
+/// let mut queue = Queue::new();
+///
+/// // Add elements to the queue
+/// queue.push("first");
+/// queue.push("second");
+///
+/// // Elements come out in the same order they went in
+/// assert_eq!(queue.pop(), Some("first"));
+/// assert_eq!(queue.pop(), Some("second"));
+/// ```
 impl<T> Queue<T> {
+    /// Creates a new, empty queue.
+    ///
+    /// # Returns
+    ///
+    /// A new `Queue<T>` with no elements.
     pub fn new() -> Self {
         Self { inner: List::new() }
     }

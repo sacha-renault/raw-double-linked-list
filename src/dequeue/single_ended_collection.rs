@@ -1,8 +1,9 @@
-//! Data structures module implementing queue and stack interfaces.
+//! Storage collections with single-ended access patterns.
 //!
-//! This module provides trait definitions and implementations for common data structures
-//! that support queue and stack operations. The primary trait is `Dequeue`, which defines
-//! the minimum functionality required for basic queue and dequeue operations.
+//! This module provides abstractions and implementations for collections that
+//! operate with a single point of access for elements, such as stacks and queues.
+//! The core functionality is defined through the `SingleEndedCollection` trait,
+//! which establishes a common interface for these data structures.
 
 pub trait SingleEndedCollection  {
     /// The type of elements that will be stored in this data structure.
