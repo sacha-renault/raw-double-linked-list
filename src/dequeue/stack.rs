@@ -1,10 +1,10 @@
-use std::fmt::Debug;
 use super::dequeue::Dequeue;
 use crate::list::linked_list::List;
+use std::fmt::Debug;
 
 #[derive(Default)]
 pub struct Stack<T> {
-    inner: List<T>
+    inner: List<T>,
 }
 
 impl<T> Stack<T> {

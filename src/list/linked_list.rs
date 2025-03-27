@@ -217,7 +217,9 @@ impl<T> List<T> {
 
         // If there's a new start, update its previous pointer
         if let Some(new_end) = self.end {
-            unsafe { (*new_end).next = None; }
+            unsafe {
+                (*new_end).next = None;
+            }
         } else {
             // List is now empty
             self.end = None;
@@ -266,7 +268,9 @@ impl<T> List<T> {
             let next_node = unsafe { (*ptr).next };
 
             // Swap next and previous pointers for the current node
-            unsafe { std::mem::swap(&mut (*ptr).next, &mut (*ptr).previous); }
+            unsafe {
+                std::mem::swap(&mut (*ptr).next, &mut (*ptr).previous);
+            }
 
             // Move to the next node (which was saved before the swap)
             current = next_node;
@@ -309,13 +313,12 @@ impl<T> List<T> {
 
         // Get the appropriate starting pointer based on side
         let raw_ptr = match &side {
-            &Side::Left => self.start?,
-            &Side::Right => self.end?
-        };
+            &Side::Left => self.start,
+            &Side::Right => self.end,
+        }?;
 
         // retrieve the associated node
-        find_index_through(
-            raw_ptr, index, self.len, &side)
+        find_index_through(raw_ptr, index, self.len, &side)
     }
 
     /// Returns a reference to the element at the specified index.
@@ -384,7 +387,6 @@ impl<T> List<T> {
         self.end.map(|ptr| unsafe { &(*ptr).value })
     }
 }
-
 
 impl<T> Drop for List<T> {
     fn drop(&mut self) {
@@ -797,7 +799,7 @@ mod tests {
 
     #[test]
     #[should_panic]
-    fn index_panic_out_of_bounds() {
+    fn index_panic_out_of_bounds_test() {
         // Arrange
         let list = (0..2).collect::<List<_>>();
 
@@ -807,11 +809,30 @@ mod tests {
 
     #[test]
     #[should_panic]
-    fn index_mut_panic_out_of_bounds() {
+    fn index_mut_panic_out_of_bounds_test() {
         // Arrange
         let mut list = (0..2).collect::<List<_>>();
 
         // Assert
         list[2] = 2;
+    }
+
+    #[test]
+    fn index_get_from_end_test() {
+        // Arrange
+        let list = (0..5).collect::<List<_>>();
+
+        // Assert
+        assert_eq!(list.get(3), Some(&3));
+    }
+
+    #[test]
+    fn reverse_empty_test() {
+        // Arrange
+        let mut list = List::<i32>::new();
+        list.reverse();
+
+        // Assert
+        assert!(list.is_empty());
     }
 }
