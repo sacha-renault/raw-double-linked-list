@@ -137,3 +137,18 @@ println!("Popped: {:?}", stack.pop());  // Output: Popped: None
 
 println!("Is stack empty? {}", stack.is_empty());  // Output: Is stack empty? true
 ```
+
+## Installation
+
+### Adding as a Git Dependency
+
+To use this library in your project without going through crates.io, add the following to your `Cargo.toml` file:
+
+```toml
+[dependencies]
+raw-double-linked-list = { git = "https://github.com/sacha-renault/raw-double-linked-list" }
+```
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
