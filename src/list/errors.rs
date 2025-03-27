@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub enum Errors {
     /// Indicates an access attempt outside the valid range of indices
     OutOfBounds,
