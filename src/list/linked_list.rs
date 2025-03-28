@@ -10,6 +10,7 @@ use std::ops::{Index, IndexMut};
 use super::errors::Errors;
 use super::list_item::{DoubleLinkedListItem, ItemPtr};
 use super::list_iter::ListIter;
+use super::list_sort::{merge_sort_by, UpdateListBound};
 use super::list_utility::{find_index_through, get_ptr_starting_point, Side};
 
 /// A doubly-linked list with pointers to both ends.
@@ -385,6 +386,63 @@ impl<T> List<T> {
     /// * `None` if the list is empty
     pub fn last(&self) -> Option<&T> {
         self.end.map(|ptr| unsafe { &(*ptr).value })
+    }
+
+    /// Concatenates another list to the end of this list.
+    ///
+    /// # Arguments
+    ///
+    /// * other - List to append to this list. Takes ownership of other.
+    ///
+    /// # Behavior
+    ///
+    /// If self is empty, it becomes other.
+    /// If other is empty, nothing happens.
+    /// Otherwise, appends other's nodes to the end of self.
+    ///
+    /// After concatenation, other is left empty but in a valid state.
+    pub fn concatenate(&mut self, mut other: List<T>) {
+        // First, ensure any of the list are empty (or not)
+        if self.is_empty() {
+            *self = other;
+            return;
+        } else if other.is_empty() {
+            return;
+        }
+
+        // chain the other list to the current one
+        self.end.map(|node| unsafe { (*node).next = other.start });
+        other
+            .start
+            .map(|node| unsafe { (*node).previous = self.end });
+        self.end = other.end;
+        self.len += other.len;
+
+        // Set other.end and other.start to none
+        other.start = None;
+        other.end = None;
+    }
+
+    pub fn sort_by<F>(&mut self, f: F)
+    where
+        F: Fn(&T, &T) -> std::cmp::Ordering + Copy,
+    {
+        // For list of size 1 or less, the list is
+        // already sorted
+        if self.len <= 1 {
+            return;
+        }
+
+        // call utility merge sort function
+        // We can unwrap because our list isn't of size
+        // Null and therefore it cannot be None
+        // (otherwise the List struct has deeper problems...)
+        let UpdateListBound { new_start, new_end } =
+            merge_sort_by(self.start.unwrap(), self.len, f);
+
+        // update bounds of the list
+        self.start = Some(new_start);
+        self.end = Some(new_end);
     }
 }
 
@@ -834,5 +892,55 @@ mod tests {
 
         // Assert
         assert!(list.is_empty());
+    }
+
+    #[test]
+    fn concatenate_left_empty_test() {
+        // Arrange
+        let mut list = List::<i32>::new();
+        let other_list = (0..5).collect::<List<_>>();
+        let clone = other_list.clone();
+        list.concatenate(other_list);
+
+        // Assert
+        assert_eq!(list, clone);
+    }
+
+    #[test]
+    fn concatenate_right_empty_test() {
+        // Arrange
+        let mut list = (0..5).collect::<List<_>>();
+        let other_list = List::<i32>::new();
+        let clone = list.clone();
+        list.concatenate(other_list);
+
+        // Assert
+        assert_eq!(list, clone);
+    }
+
+    #[test]
+    fn concatenate_test() {
+        // Arrange
+        let mut list = (0..3).collect::<List<_>>();
+        let other_list = (3..5).collect::<List<_>>();
+        list.concatenate(other_list);
+
+        // Assert
+        assert_eq!(list, (0..5).collect::<List<_>>());
+    }
+
+    #[test]
+    fn sort_test() {
+        // Arrange
+        let mut list = (0..3).collect::<List<_>>();
+        let mut list2 = (3..8).collect::<List<_>>();
+        list2.reverse();
+        list.concatenate(list2);
+
+        list.sort_by(|a, b| b.cmp(a));
+
+        // Assert
+        assert!(list.iter().is_sorted_by(|a, b| a > b));
+        assert_eq!(list, (0..8).rev().collect::<List<_>>());
     }
 }
