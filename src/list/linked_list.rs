@@ -423,6 +423,17 @@ impl<T> List<T> {
         other.end = None;
     }
 
+    /// Sorts the list in-place according to the given comparison function.
+    ///
+    /// This method sorts the list using an implementation of merge sort, which
+    /// provides stable O(n log n) performance regardless of input data.
+    ///
+    /// # Arguments
+    ///
+    /// * `f` - A comparison function that returns an ordering between elements.
+    ///   The function should return `Ordering::Less` if the first argument goes before
+    ///   the second, `Ordering::Equal` if they are equivalent, or `Ordering::Greater` if
+    ///   the first argument goes after the second.
     pub fn sort_by<F>(&mut self, f: F)
     where
         F: Fn(&T, &T) -> std::cmp::Ordering + Copy,
@@ -443,6 +454,19 @@ impl<T> List<T> {
         // update bounds of the list
         self.start = Some(new_start);
         self.end = Some(new_end);
+    }
+}
+
+impl<T: Ord> List<T> {
+    /// Sorts the list in ascending order.
+    ///
+    /// This method sorts the elements of the list in place, using their natural ordering.
+    /// Elements must implement the `Ord` trait to use this method.
+    ///
+    /// The sort operation is stable: equal elements retain their relative order.
+    /// The algorithm has O(n log n) time complexity and uses a merge sort implementation.
+    pub fn sort(&mut self) {
+        self.sort_by(|a, b| a.cmp(b));
     }
 }
 
@@ -930,7 +954,7 @@ mod tests {
     }
 
     #[test]
-    fn sort_test() {
+    fn sort_by_test() {
         // Arrange
         let mut list = (0..3).collect::<List<_>>();
         let mut list2 = (3..8).collect::<List<_>>();
@@ -942,5 +966,31 @@ mod tests {
         // Assert
         assert!(list.iter().is_sorted_by(|a, b| a > b));
         assert_eq!(list, (0..8).rev().collect::<List<_>>());
+    }
+
+    #[test]
+    fn sort_test() {
+        // Arrange
+        let mut list = (0..3).collect::<List<_>>();
+        let mut list2 = (3..8).collect::<List<_>>();
+        list2.reverse();
+        list.concatenate(list2);
+
+        list.sort();
+
+        // Assert
+        assert!(list.iter().is_sorted_by(|a, b| a < b));
+        assert_eq!(list, (0..8).collect::<List<_>>());
+    }
+
+    #[test]
+    fn sort_empty_test() {
+        // Arrange
+        let mut list = (0..1).collect::<List<_>>();
+        list.sort();
+
+        // Assert
+        assert_eq!(list.len(), 1);
+        assert_eq!(list, (0..1).collect::<List<_>>());
     }
 }
